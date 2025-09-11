@@ -1,5 +1,5 @@
 {
-  "name": "prima",
+  "name": "pulsehub",
   "version": "1.0.0",
   "private": true,
   "type": "module",
@@ -13,7 +13,9 @@
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
-    "prepare": "husky"
+    "prepare": "husky",
+  "test": "vitest run -c vitest.config.ts",
+  "test:watch": "vitest -c vitest.config.ts"
   },
   "dependencies": {
     "@prisma/client": "^5.18.0",
@@ -27,6 +29,7 @@
     "@types/express": "^5.0.3",
     "@typescript-eslint/eslint-plugin": "^8.43.0",
     "@typescript-eslint/parser": "^8.43.0",
+    "@vitest/coverage-v8": "^2.1.1",
     "eslint": "^9.35.0",
     "eslint-config-prettier": "^10.1.8",
     "eslint-import-resolver-node": "^0.3.9",
@@ -36,7 +39,10 @@
     "lint-staged": "^16.1.6",
     "prettier": "^3.6.2",
     "prisma": "^5.18.0",
+    "ts-node": "^10.9.2",
     "tsx": "^4.19.1",
-    "typescript": "^5.6.3"
+    "typescript": "^5.6.3",
+    "vite-tsconfig-paths": "^5.1.4",
+    "vitest": "^2.1.1"
   }
 }

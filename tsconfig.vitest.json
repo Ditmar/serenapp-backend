@@ -1,0 +1,29 @@
+{
+    "extends": "./tsconfig.json",
+    "compilerOptions": {
+        "rootDir": ".",
+        "types": [
+            "vitest/globals"
+        ],
+        "baseUrl": ".",
+        "paths": {
+            "@domain/*": [
+                "src/domain/*"
+            ],
+            "@app/*": [
+                "src/application/*"
+            ],
+            "@infra/*": [
+                "src/infrastructure/*"
+            ],
+            "@shared/*": [
+                "src/shared/*"
+            ]
+        }
+    },
+    "include": [
+        "src",
+        "tests",
+        "vitest.config.ts"
+    ]
+}
