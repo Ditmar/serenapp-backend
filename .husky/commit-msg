@@ -1,0 +1,16 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+# Enforce commit message prefixes: feat:, fix:, release:, hotfix:
+# Use commitlint for structure and a custom grep for strict prefixes
+
+npx commitlint --edit "$1" -q || exit 1
+
+firstword=$(head -n1 "$1" | sed -E 's/^([^:]+:).*/\1/')
+case "$firstword" in
+  feat:|fix:|release:|hotfix:)
+    exit 0 ;;
+  *)
+    echo "Commit message must start with one of: feat:, fix:, release:, hotfix:" >&2
+    exit 1 ;;
+ esac
