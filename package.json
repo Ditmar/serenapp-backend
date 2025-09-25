@@ -14,8 +14,9 @@
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "prepare": "husky",
-  "test": "vitest run -c vitest.config.ts",
-  "test:watch": "vitest -c vitest.config.ts"
+    "test": "vitest run -c vitest.config.ts --coverage",
+    "test:coverage": "npm run test --coverage",
+    "test:watch": "vitest -c vitest.config.ts"
   },
   "dependencies": {
     "@prisma/client": "5.18.0",
