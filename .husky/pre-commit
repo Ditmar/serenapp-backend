@@ -1,11 +1,8 @@
 #!/usr/bin/env sh
 . "$(dirname -- "$0")/_/husky.sh"
 
-# Run fast checks before commit
-npm run typecheck || exit 1
-npm run lint || exit 1
+# Run lint-staged for staged files
+npx lint-staged || exit 1
 
-# Optionally run lint-staged if configured
-if [ -f .lintstagedrc.json ] || [ -f .lintstagedrc ] || [ -f package.json ]; then
-  npx lint-staged -q || true
-fi
+# Run typecheck on the entire project
+npm run typecheck || exit 1
