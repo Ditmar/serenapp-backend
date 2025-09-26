@@ -1,6 +1,16 @@
 #!/usr/bin/env sh
 . "$(dirname -- "$0")/_/husky.sh"
 
-# Block push if lint or typecheck fails on main code
+# Final checks before push
+echo "🔍 Running final checks before push..."
+
+# Ensure code compiles
 npm run typecheck || exit 1
+
+# Ensure code style is correct  
 npm run lint || exit 1
+
+# Run tests to ensure nothing is broken
+npm run test || exit 1
+
+echo "✅ All checks passed! Pushing..."
