@@ -262,7 +262,7 @@ model RefreshToken {
   id        String   @id @default(cuid())
   userId    String
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  token     String   @unique
+  tokenHash String   @unique
   revoked   Boolean  @default(false)
   issuedAt  DateTime @default(now())
   expiresAt DateTime
