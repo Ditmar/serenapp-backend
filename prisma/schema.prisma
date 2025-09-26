@@ -14,3 +14,258 @@ model Account {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
+
+model Tenant {
+  id             String   @id @default(cuid())
+  name           String
+  slug           String   @unique
+  plan           String   @default("basic")
+  status         String   @default("active")
+  timeZone       String   @default("America/La_Paz")
+  leadTimeMin    Int      @default(60)
+  maxAdvanceDays Int      @default(60)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  users     User[]
+  staff     Staff[]
+  blocks    Block[]
+  clients   Client[]
+  invites   Invite[]
+  services  Service[]
+  bookings  Booking[]
+  notifs    Notification[]
+  rules     AvailabilityRule[]
+  notifTpls NotificationTemplate[]
+}
+
+model User {
+  id        String   @id @default(cuid())
+  tenantId  String
+  tenant    Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  email     String
+  password  String
+  firstName String
+  lastName  String
+  phone     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  staff        Staff?
+  client       Client?
+  Invite       Invite[]
+  roles        UserRole[]
+  RefreshToken RefreshToken[]
+
+  @@unique([tenantId, email])
+}
+
+enum Role {
+  CLIENT
+  PROVIDER
+  ADMIN
+}
+
+model UserRole {
+  userId String
+  role   Role
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([userId, role])
+}
+
+model Staff {
+  id       String             @id @default(cuid())
+  tenantId String
+  tenant   Tenant             @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  userId   String?            @unique
+  user     User?              @relation(fields: [userId], references: [id])
+  name     String
+  email    String?
+  phone    String?
+  blocks   Block[]
+  bookings Booking[]
+  services StaffService[]
+  rules    AvailabilityRule[]
+}
+
+model Client {
+  id       String    @id @default(cuid())
+  tenantId String
+  tenant   Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  userId   String?   @unique
+  user     User?     @relation(fields: [userId], references: [id])
+  name     String
+  email    String?
+  phone    String?
+  notes    String?
+  bookings Booking[]
+
+  @@index([tenantId, email])
+}
+
+model Service {
+  id           String         @id @default(cuid())
+  tenantId     String
+  tenant       Tenant         @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  name         String
+  category     String
+  description  String?
+  durationMin  Int
+  price        Decimal?
+  active       Boolean        @default(true)
+  bufferBefore Int            @default(0)
+  bufferAfter  Int            @default(0)
+  bookings     Booking[]
+  staff        StaffService[]
+
+  @@index([tenantId, name])
+}
+
+model StaffService {
+  staffId   String
+  serviceId String
+  tenantId  String
+  staff     Staff   @relation(fields: [staffId], references: [id], onDelete: Cascade)
+  service   Service @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+
+  @@id([staffId, serviceId])
+}
+
+enum RuleType {
+  weekly
+  monthly
+  exception
+}
+
+model AvailabilityRule {
+  id        String    @id @default(cuid())
+  tenantId  String
+  tenant    Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  staffId   String
+  staff     Staff     @relation(fields: [staffId], references: [id], onDelete: Cascade)
+  type      RuleType
+  dow       Int? // 1..7 (Mon..Sun) when weekly dow -> day of week
+  dom       Int? // 1..31 when monthly day -> day of month
+  rrule     String? // iCal RRULE for complex rules
+  startTime String? // "HH:mm" -> "09:00"
+  endTime   String? // "HH:mm" -> "17:00"
+  date      DateTime? // for exceptions
+  available Boolean   @default(true)
+  createdAt DateTime  @default(now())
+
+  @@index([tenantId, staffId, type, dow, date])
+  @@index([tenantId, staffId, date])
+}
+
+model Block {
+  id        String   @id @default(cuid())
+  tenantId  String
+  tenant    Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  staffId   String
+  staff     Staff    @relation(fields: [staffId], references: [id], onDelete: Cascade)
+  startsAt  DateTime
+  endsAt    DateTime
+  reason    String?
+  createdAt DateTime @default(now())
+
+  @@index([tenantId, staffId, startsAt])
+}
+
+enum BookingStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  CANCELLED
+  SUGGESTED
+  CONFIRMED
+  CANCELLED_BY_CLIENT
+  CANCELLED_BY_PROVIDER
+  RESCHEDULED
+}
+
+model Booking {
+  id         String        @id @default(cuid())
+  tenantId   String
+  tenant     Tenant        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  clientId   String
+  client     Client        @relation(fields: [clientId], references: [id])
+  providerId String
+  provider   Staff         @relation(fields: [providerId], references: [id])
+  serviceId  String
+  service    Service       @relation(fields: [serviceId], references: [id])
+  startsAt   DateTime
+  endsAt     DateTime
+  status     BookingStatus
+  price      Decimal?
+  requestId  String        @unique // to idempotently handle booking requests
+  createdAt  DateTime      @default(now())
+  updatedAt  DateTime      @updatedAt
+
+  events BookingEvent[]
+
+  @@index([tenantId, providerId, startsAt])
+}
+
+model BookingEvent {
+  id        String         @id @default(cuid())
+  bookingId String
+  booking   Booking        @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  from      BookingStatus?
+  to        BookingStatus
+  actor     String // userId | "system"
+  notes     String?
+  at        DateTime       @default(now())
+}
+
+model Invite {
+  id        String    @id @default(cuid())
+  tenantId  String
+  tenant    Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  invitedBy String
+  User      User      @relation(fields: [invitedBy], references: [id])
+  role      Role
+  tokenHash String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdBy String
+}
+
+model NotificationTemplate {
+  id       String  @id @default(cuid())
+  tenantId String
+  tenant   Tenant  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  event    String
+  channel  String // email | webhook
+  subject  String?
+  body     String
+}
+
+enum NotificationStatus {
+  QUEUED
+  SENT
+  FAILED
+}
+
+model Notification {
+  id        String             @id @default(cuid())
+  tenantId  String
+  tenant    Tenant             @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  event     String
+  channel   String
+  status    NotificationStatus @default(QUEUED)
+  payload   Json
+  createdAt DateTime           @default(now())
+}
+
+model RefreshToken {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  token     String   @unique
+  revoked   Boolean  @default(false)
+  issuedAt  DateTime @default(now())
+  expiresAt DateTime
+
+  @@index([userId])
+}

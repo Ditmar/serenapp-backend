@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "tsx watch src/main.ts",
+    "dev": "npm run db:start && tsx watch src/main.ts",
     "start": "node dist/main.js",
     "build": "tsc",
     "prisma:generate": "prisma generate",
@@ -16,7 +16,13 @@
     "prepare": "husky",
     "test": "vitest run -c vitest.config.ts --coverage",
     "test:coverage": "npm run test --coverage",
-    "test:watch": "vitest -c vitest.config.ts"
+    "test:watch": "vitest -c vitest.config.ts",
+    "db:start": "docker-compose up -d",
+    "db:stop": "docker-compose down",
+    "db:seed": "npx prisma db seed"
+  },
+  "prisma": {
+    "seed": "ts-node prisma/seed.ts"
   },
   "dependencies": {
     "@prisma/client": "5.18.0",
@@ -28,6 +34,7 @@
     "@commitlint/cli": "19.8.1",
     "@commitlint/config-conventional": "19.8.1",
     "@types/express": "5.0.3",
+    "@types/node": "24.5.2",
     "@typescript-eslint/eslint-plugin": "8.43.0",
     "@typescript-eslint/parser": "8.43.0",
     "@vitest/coverage-v8": "2.1.1",
